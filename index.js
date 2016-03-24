@@ -13,30 +13,36 @@ function leftpad_orig(str, len, ch) {
 
 function leftpad_prejoin(str, len, ch) {
 	str = String(str);
-	ch = ch || ' ';
+	if (!ch && ch !== 0) ch = ' ';
 	len = len - str.length;
-	if (len <= 0) return str;
+	if (len < 1) return str;
 	var pad = '';
-	while (--len) {
-		pad += ch
+	while (len--) {
+		pad += ch;
 	}
 	return pad + str;
 }
 
 function leftpad_modern(str, len, ch) {
-	return (len > str.length ? (ch || ' ').repeat(len - str.length) : '') + str;
+	str = String(str);
+	len = len - str.length;
+	if (len < 1) return str;
+	if (!ch && ch !== 0) ch = ' ';
+	return ch.repeat(len) + str;
 }
 
 function leftpad_array(str, len, ch) {
-	return [Array(len + 1).join(ch), str].join('');
+	str = String(str);
+	len = len - str.length;
+	if (len < 1 || isNaN(len)) return str;
+	if (!ch && ch !== 0) ch = ' ';
+	return Array(len + 1).join(ch) + str;
 }
 
 function leftpad_binary(str, len, ch) {
 	str = String(str);
-
 	len = len - str.length;
-	if (len < 1) return str;
-
+	if (len < 1 || isNaN(len)) return str;
 	if (!ch && ch !== 0) ch = ' ';
 
 	var temp = ch;
@@ -57,13 +63,11 @@ function leftpad_binary(str, len, ch) {
 
 function leftpad_binary_simpler(str, len, ch) {
 	str = String(str);
-
 	len = len - str.length;
-	if (len < 1) return str;
-
+	if (len < 1 || isNaN(len)) return str;
 	if (!ch && ch !== 0) ch = ' ';
 
-	var pad = "";
+	var pad = '';
 	for (var i = len, temp = ch; i !== 0; i >>= 1) {
 		if (i & 1) pad += temp;
 		temp += temp;
