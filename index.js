@@ -1,6 +1,4 @@
 var Benchmark = require('benchmark');
-var suite = new Benchmark.Suite;
-
 
 function leftpad_orig(str, len, ch) {
 	str = String(str);
@@ -17,6 +15,7 @@ function leftpad_prejoin(str, len, ch) {
 	str = String(str);
 	ch = ch || ' ';
 	len = len - str.length;
+	if (len <= 0) return str;
 	var pad = '';
 	while (--len) {
 		pad += ch
@@ -72,43 +71,50 @@ function leftpad_binary_simpler(str, len, ch) {
 	return pad + str;
 }
 
-var text = 'abacus';
-var padlen = 40;
-var padchar = ' ';
-
-
-console.log('Benchmarking: leftpad("%s", %s, "%s")', text, padlen, padchar);
-
-// add tests
-suite
-	.add('leftpad_orig', function() {
-		leftpad_orig(text, padlen, padchar);
-	})
-	.add('leftpad_prejoin', function() {
-		leftpad_prejoin(text, padlen, padchar);
-	})
-	.add('leftpad_modern', function() {
-		leftpad_modern(text, padlen, padchar);
-	})
-	.add('leftpad_array', function() {
-		leftpad_array(text, padlen, padchar);
-	})
-	.add('leftpad_binary', function() {
-		leftpad_binary(text, padlen, padchar);
-	})
-	.add('leftpad_binary_simpler', function() {
-		leftpad_binary_simpler(text, padlen, padchar);
-	})
-	// add listeners
-	.on('cycle', function(event) {
-		console.log(String(event.target));
-	})
-	.on('complete', function() {
-		var fastest = this.filter('fastest')[0];
-		console.log('Fastest is ' + fastest.name);
-		this.forEach(function(bench) {
-			console.log(bench.name + ': ' + (Math.round(bench.hz / fastest.hz * 100) / 100));
+function bench(text, padlen, padchar, onComplete) {
+	var suite = new Benchmark.Suite;
+	suite
+		.add('leftpad_orig', function() {
+			leftpad_orig(text, padlen, padchar);
 		})
-	})
-	// run async
-	.run({'async': true});
+		.add('leftpad_prejoin', function() {
+			leftpad_prejoin(text, padlen, padchar);
+		})
+		.add('leftpad_modern', function() {
+			leftpad_modern(text, padlen, padchar);
+		})
+		.add('leftpad_array', function() {
+			leftpad_array(text, padlen, padchar);
+		})
+		.add('leftpad_binary', function() {
+			leftpad_binary(text, padlen, padchar);
+		})
+		.add('leftpad_binary_simpler', function() {
+			leftpad_binary_simpler(text, padlen, padchar);
+		})
+		.on('start', function() {
+			console.log('\nBenchmarking: leftpad("%s", %s, "%s")', text, padlen, padchar);
+		})
+		.on('complete', function() {
+			var fastest = this.filter('fastest')[0];
+			this.forEach(function(bench) {
+				console.log(String(bench) + ' #' + (Math.round(bench.hz / fastest.hz * 100) / 100));
+			});
+			onComplete && onComplete();
+		})
+		.run({
+			async: true
+		});
+}
+
+var STR = 'abacus';
+var CHAR = ' ';
+var LENGTHS = [80, 40, 20, 10, 5];
+var i = 0;
+
+function start() {
+	if (i >= LENGTHS.length) return;
+	bench(STR, LENGTHS[i], CHAR, start);
+	i++;
+}
+start();
